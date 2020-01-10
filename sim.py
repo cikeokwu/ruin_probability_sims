@@ -1,16 +1,17 @@
 import numpy as np
 
 
-DEBUG = False
+DEBUG = False  ## Set this to true if you want to see what's happening at each step
+
+
+
 #Global Simulation Fixed Variables
 savings_ruin_time_diff = []
 savings_ruin_time = []
 savings_shortfall_diff = []
 savings_shortfall = []
 
-
-
-# Simulation with different incomes same distribution
+# Simulations keeping aggregate atteributes fixed
 def simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents, diff=False, income=True):
     savings_shock_times = []
     savings_shock_sizes = []
@@ -73,7 +74,7 @@ def simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents, d
                         break
 
 
-        print(f" Time Step {time_step} executed ")
+        if DEBUG: print(f" Time Step {time_step} executed ")
         time_step += 1
         if DEBUG:
             for agent in range(num_agents):
@@ -89,6 +90,16 @@ def simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents, d
 
 
 def get_effects(num_trials, p, avg_income, avg_shock_time, max_shock_size, num_agents):
+    """
+    :param num_trials: number of simulations to run
+    :param p: proportion of income that should be given to the savings circle
+    :param avg_income:  average income per agent
+    :param avg_shock_time: average number of shocks per time step
+    :param max_shock_size: maximum shock size per time step (uniform distribution between 0 and max size)
+    :param num_agents:  number of agents to run the simulation for
+    :return: Two dimensional array the first index is for varied income and second index is for varying shocks:
+            Each array has the ruin times for each run and the shortfall that would have been needed to avoid ruin.
+    """
     for i in range(num_trials):
         results_diff = []
         results = []
