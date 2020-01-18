@@ -1,7 +1,7 @@
 import numpy as np
 
 
-DEBUG = False  ## Set this to true if you want to see what's happening at each step
+DEBUG = True  ## Set this to true if you want to see what's happening at each step
 
 
 
@@ -11,8 +11,8 @@ savings_ruin_time = []
 savings_shortfall_diff = []
 savings_shortfall = []
 
-# Simulations keeping aggregate atteributes fixed
-def simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents, diff=False, income=True):
+# Simulations keeping aggregate attributes fixed
+def simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents=2, diff=False, income=True):
     savings_shock_times = []
     savings_shock_sizes = []
     #Per Simulation Variables
@@ -37,7 +37,7 @@ def simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents, d
     savings_reserve = 0
     agent_ruin_times = [[] for i in range(num_agents)]
     agent_reserves = np.zeros(num_agents)
-    agent_shock_times = [np.random.poisson(shock_times_param[i], 1000000) for i in range(num_agents)]
+    agent_shock_times = [np.random.poisson(shock_times_param[i], 10000000) for i in range(num_agents)]
     time_step = 0
     while not savings_ruined:
         agent_reserves = agent_reserves + (1 - p)*incomes
@@ -45,33 +45,41 @@ def simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents, d
         # Simulating for each agent
         for agent in range(num_agents):
             if DEBUG: print(f"{agent_shock_times[agent][time_step]} shocks happening in this time period for agent {agent} ")
-            for i in range(agent_shock_times[agent][time_step]):  # number of shocks in a given time interval
-                if savings_ruined:
-                    break
-                shock_size = np.random.uniform(0, max_shock_size)  # getting shock sizes per shock. Shock size at most twice income
-                if DEBUG: print(f" shock {i} of size {shock_size} happenings with reserve {agent_reserves[agent]}")
-                if agent_reserves[agent] - shock_size > 0:
-                    agent_reserves[agent] -= shock_size
-                else:  # gets ruined bailout process occurs
-                    if DEBUG: print(f"agent {agent} is ruined and getting bailed out")
-                    agent_ruin_times[agent].append(time_step)
-                    savings_shock = 0 - (agent_reserves[agent] - shock_size)
-                    if DEBUG: print(f" giving agent {agent} {savings_shock} with savings reserve of {savings_reserve}")
-                    if savings_reserve - savings_shock > 0:
-                        agent_reserves[agent] += savings_shock - shock_size
-                        savings_reserve -= savings_shock
-                    else:
-                        agent_reserves[agent] += savings_shock - shock_size
-                        savings_reserve -= savings_shock
-                        if DEBUG: print(f" savings circle is ruined at time {time_step}")
-                        if diff:
-                            savings_ruin_time_diff.append(time_step)
-                            savings_shortfall_diff.append(savings_reserve)
-                        else:
-                            savings_ruin_time.append(time_step)
-                            savings_shortfall.append(savings_reserve)
-                        savings_ruined = True
+            try:
+                for i in range(agent_shock_times[agent][time_step]):  # number of shocks in a given time interval
+                    if savings_ruined:
                         break
+                    shock_size = np.random.uniform(0, max_shock_size)  # getting shock sizes per shock. Shock size at most twice income
+                    if DEBUG: print(f" shock {i} of size {shock_size} happenings with reserve {agent_reserves[agent]}")
+                    if agent_reserves[agent] - shock_size > 0:
+                        agent_reserves[agent] -= shock_size
+                    else:  # gets ruined bailout process occurs
+                        if DEBUG: print(f"agent {agent} is ruined and getting bailed out")
+                        agent_ruin_times[agent].append(time_step)
+                        savings_shock = 0 - (agent_reserves[agent] - shock_size)
+                        if DEBUG: print(f" giving agent {agent} {savings_shock} with savings reserve of {savings_reserve}")
+                        if savings_reserve - savings_shock > 0:
+                            agent_reserves[agent] += savings_shock - shock_size
+                            savings_reserve -= savings_shock
+                        else:
+                            agent_reserves[agent] += savings_shock - shock_size
+                            savings_reserve -= savings_shock
+                            if DEBUG: print(f" savings circle is ruined at time {time_step}")
+                            if diff:
+                                savings_ruin_time_diff.append(time_step)
+                                savings_shortfall_diff.append(savings_reserve)
+                            else:
+                                savings_ruin_time.append(time_step)
+                                savings_shortfall.append(savings_reserve)
+                            savings_ruined = True
+                            break
+            except IndexError:
+                if diff:
+                    savings_ruin_time_diff.append(time_step)
+                    savings_shortfall_diff.append(0)
+                else:
+                    savings_ruin_time.append(time_step)
+                    savings_shortfall.append(0)
 
 
         if DEBUG: print(f" Time Step {time_step} executed ")
@@ -89,7 +97,7 @@ def simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents, d
 
 
 
-def get_effects(num_trials, p, avg_income, avg_shock_time, max_shock_size, num_agents):
+def get_effects(num_trials, p, avg_income, avg_shock_time, max_shock_size, num_agents=2):
     """
     :param num_trials: number of simulations to run
     :param p: proportion of income that should be given to the savings circle
@@ -133,5 +141,5 @@ def get_effects(num_trials, p, avg_income, avg_shock_time, max_shock_size, num_a
 
 
 if __name__ == "__main__":
-    inc , dist = get_effects(100, 0.2, 100, 2,100, 3)
+    inc, dist = get_effects(100, 0.2, 100, 2,100, 3)
     
