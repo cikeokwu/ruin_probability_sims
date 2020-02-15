@@ -1,17 +1,19 @@
 from cython.view cimport array
-import os
 import numpy as np
 cimport numpy as np
-from multiprocessing import Queue, Pool
+
 
 DTYPE = np.float
 ctypedef np.float_t DTYPE_t
 
 
 # Simulations keeping aggregate attributes fixed
-cdef float simulate_effect(double p, double avg_income, double avg_shock_time, double max_shock_size, int num_agents=2, int diff=0):
+cpdef float simulate_effect(double p, double avg_income, double avg_shock_time, double max_shock_size, int num_agents=2, int diff=0, int seed=-1):
     cdef int i
     cdef int j
+    if seed > -1 :
+        seed = np.random.uniform(0, seed)
+        np.random.seed(seed)
     #Per Simulation Variables
     incomes_preview = array(shape=(num_agents,), itemsize=sizeof(double), format="d")
     cdef double[:] incomes = incomes_preview
@@ -93,59 +95,6 @@ cdef float simulate_effect(double p, double avg_income, double avg_shock_time, d
     return time_step
 
 
-
-
-
-
-
-
-cpdef get_effects(int num_trials, double p, double avg_income, double avg_shock_time, double max_shock_size, int num_agents=2):
-    """
-    :param num_trials: number of simulations to run
-    :param p: proportion of income that should be given to the savings circle
-    :param avg_income:  average income per agent
-    :param avg_shock_time: average number of shocks per time step
-    :param max_shock_size: maximum shock size per time step (uniform distribution between 0 and max size)
-    :param num_agents:  number of agents to run the simulation for
-    :return: Two dimensional array the first index is for varied income and second index is for varying shocks:
-            Each array has the ruin times for each run and the shortfall that would have been needed to avoid ruin.
-    """
-    cdef list no_effect = []
-    cdef list income_effect = []
-    cdef list time_effect = []
-    cdef list size_effect = []
-    cdef int i
-    for i in range(num_trials):
-        no_effect.append(simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents, diff=0))
-        income_effect.append(simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents, diff=1))
-        time_effect.append(simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents, diff=2))
-        size_effect.append(simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents, diff=3))
-
-
-    return no_effect , income_effect , time_effect , size_effect
-
-# def get_effects_pooled(int num_trials, double p, double avg_income, double avg_shock_time, double max_shock_size, int num_agents=2):
-#     """
-#     :param num_trials: number of simulations to run
-#     :param p: proportion of income that should be given to the savings circle
-#     :param avg_income:  average income per agent
-#     :param avg_shock_time: average number of shocks per time step
-#     :param max_shock_size: maximum shock size per time step (uniform distribution between 0 and max size)
-#     :param num_agents:  number of agents to run the simulation for
-#     :return: Two dimensional array the first index is for varied income and second index is for varying shocks:
-#             Each array has the ruin times for each run and the shortfall that would have been needed to avoid ruin.
-#     """
-#     no_effect = Queue()
-#     income_effect = Queue()
-#     time_effect = Queue()
-#     size_effect = Queue()
-#     with Pool(processes=os.cpu_count()) as pool:
-#         pool.map(lambda x:no_effect.put(simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents, diff=0)), range(num_trials))
-#         pool.map(lambda x:income_effect.put(simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents, diff=1)), range(num_trials))
-#         pool.map(lambda x:time_effect.put(simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents, diff=2)), range(num_trials))
-#         pool.map(lambda x:size_effect.put(simulate_effect(p, avg_income, avg_shock_time, max_shock_size, num_agents, diff=3)), range(num_trials))
-#
-#     return no_effect , income_effect , time_effect , size_effect
 
 
     
