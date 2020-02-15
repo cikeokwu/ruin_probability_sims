@@ -41,7 +41,7 @@ def get_effects_pooled(num_trials, p, avg_income, avg_shock_time, max_shock_size
     NUM_AGENTS = num_agents
     print(f"Running with paramters p = {P}, average income = {AVG_INCOME}, average shock times = {AVG_SHOCK_TIME}, max shock size = {MAX_SHOCK_SIZE}")
     num_processes = os.cpu_count() * 2
-    print("Number of processes;" + num_processes)
+    print(f"Number of processes: {num_processes}")
     params = [0]*num_trials + [1]*num_trials + [2]*num_trials + [3]*num_trials
     args = zip(range(4*num_trials), params)
 
